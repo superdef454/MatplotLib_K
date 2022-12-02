@@ -2,6 +2,17 @@ import random
 import math
 import matplotlib.pyplot as plt
 
+import json
+
+def load_data():
+    with open("config.txt", 'r') as json_data:
+        return json.loads(json_data.read())
+
+def save_data(name, value):
+    existing_data = load_data()
+    existing_data[name] = value
+    with open("config.txt", 'w') as w:
+        w.write(json.dumps(existing_data, indent=4, sort_keys=True))
 
 # По варианту:
 Aa = 10 # заданная интенсивность потока покупателей
@@ -9,12 +20,23 @@ Y_strah_zapas = 120 # Величина страхового запаса
 Y_max = 300 # Максимальный запас товариов (Хз где взять)
 m = 6 # Поставки
 
+save_data('Aa', Aa)
+
+print(load_data())
+
+# Данные для оценки прибыли
+a1 = 50 # Продажа 1 ед. товара
+b1 = 10 # Убыток за хранение (профицит)
+c1 = 40 # Штраф за дефицит
+
 # Для программы
 Y_mas = [Y_max] # Лист точек Y
 T_mas = [0] # Лист точек T
 T_peresech = [] # Лист пересечений
-Dif = 0
-Prof = 0
+T_iter = []
+Dif = 0 # Дефицит
+Prof = 0 # Профицит
+# Цит
 
 def R():
     # случайная величина, имеющая равномерное распределение на отрезке [0, 1]
@@ -43,6 +65,7 @@ def Max_to_strah(): # Функция покупок товаров до стра
     t = T_mas[-1]
     T_mas.append(t)
     Y_mas.append(Yy)
+    T_start = t
     while(Yy >= Y_strah_zapas):
         t += ExpZakon()
         T_mas.append(t)
@@ -63,9 +86,21 @@ def Max_to_strah(): # Функция покупок товаров до стра
         Dif += 1
     else:
         Prof += 1
+    T_end = T_mas[-1]
+    Pr = Y_max - Y_mas[-1]
+    if Y_mas[-1] >= 0:
+        Pr -= (Y_max - Pr) * b1
+        print("Профицит, ", end='')
+    else:
+        Pr -= c1 * (abs(Y_mas[-1]))
+        print("Дефицит,  ", end='')
+    T_iter.append((T_end + T_start) / 2)
+    print(f'Прибыль: {Pr}')
+    # return Pr
     
 # Подсчёт модели
-for i in range(100): # Кол-во итераций
+for i in range(8): # Кол-во итераций
+    print(f'{i+1}: ', end='')
     Max_to_strah()
 print(f'Количество случаев профицита: {Prof}\nКоличество случаев дефицита: {Dif}')
 
@@ -78,6 +113,9 @@ plt.xlabel("Время", loc="right")
 plt.ylabel("Товары", loc="top")
 plt.text(0.2,122,"Y страховое", fontsize=10, color='orange')
 plt.text(0.2,Y_max,"Y max", fontsize=10, color='green')
+
+for i in range(len(T_iter)):
+    plt.text(T_iter[i], 285, f'{i+1}')
 
 # Ограничение на экране
 plt.xlim([0, T_mas[-1]])
