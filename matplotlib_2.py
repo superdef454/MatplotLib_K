@@ -29,9 +29,10 @@ def x():
     return int(a+R()*(b-a))
 
 def T(): # Время подвоза T определяется по нормальному закону
-    Mx = 0 # математическое ожидание времени подвоза
-    Sigmax = 0 # среднее квадратическое отклонение
+    Mx = 5 # математическое ожидание времени подвоза
+    Sigmax = 0.5 # среднее квадратическое отклонение
     Zz = sum(R() for _ in range(1, 12)) - 6    # нормально распределенная случайная величина с параметрами
+    return Mx+Sigmax*Zz
 
 def Max_to_strah(): # Функция покупок товаров до страхового
     global Y_mas, T_mas
@@ -47,12 +48,22 @@ def Max_to_strah(): # Функция покупок товаров до стра
         T_mas.append(t)
         Y_mas.append(Yy)
     T_peresech.append(T_mas[-1])
+    T_Podvoza = T() + t
+    while(t <= T_Podvoza):
+        t += ExpZakon()
+        T_mas.append(t)
+        Y_mas.append(Yy)
+        Yy -= x()
+        T_mas.append(t)
+        Y_mas.append(Yy)
     
 Max_to_strah()
 # Отрисовка
 plt.title("Модель управления запасами")
 plt.xlabel("Время", loc="right")
-plt.scatter(T_peresech, [Y_strah_zapas for _ in range(len(T_peresech))]) # Можно сделать список пересечений list_per = [] \n list_per.append(t_mas[-1])
+plt.ylabel("Товары", loc="top")
+plt.xlim([0, 20])
+plt.scatter(T_peresech, [Y_strah_zapas for _ in range(len(T_peresech))]) # цвет
 plt.plot(T_mas, Y_mas)
 plt.plot([-1, T_mas[-1]],[Y_strah_zapas,Y_strah_zapas])
 plt.show()
