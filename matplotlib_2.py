@@ -139,10 +139,10 @@ def Max_to_strah_model(Y_str = Y_strah_zapas, MM = m, Aa = Aa):
         Pr -= c1 * (abs(Yy))
     return Pr # Возвращает прибыль
     
-def model(iter, Aa, Mm, strah):
+def model(iter, Aa, Mm, strah, Kol_vo = 10000):
     print(f'{iter}: lambda: {Aa:3d} | Y_страховое: {strah} | m: {Mm} | Прибыль: ', end='')
     pr = [] # Массив прибыли для подсчёта критеря Кохрена
-    Kol_vo = 1000 # Количество итераций
+     # Количество итераций
     Average = 0 
     for _ in range(Kol_vo):
         Average += Max_to_strah_model(strah, Mm, Aa)
@@ -165,19 +165,22 @@ def model(iter, Aa, Mm, strah):
     
 def Regress():
     for _ in range(100):
+        kol = 10000
+        print(f"Количество итераций в каждом опыте: {kol}")
         mass_Pr = []
-        mass_Pr.append(model(1, 6, 4, 100))
-        mass_Pr.append(model(2, 14, 4, 100))
-        mass_Pr.append(model(3, 6, 4, 140))
-        mass_Pr.append(model(4, 14, 4, 140))
-        mass_Pr.append(model(5, 6, 8, 100))
-        mass_Pr.append(model(6, 14, 8, 100))
-        mass_Pr.append(model(7, 6, 8, 140))
-        mass_Pr.append(model(8, 14, 8, 140))
+        mass_Pr.append(model(1, 6, 4, 100, kol))
+        mass_Pr.append(model(2, 14, 4, 100, kol))
+        mass_Pr.append(model(3, 6, 4, 140, kol))
+        mass_Pr.append(model(4, 14, 4, 140, kol))
+        mass_Pr.append(model(5, 6, 8, 100, kol))
+        mass_Pr.append(model(6, 14, 8, 100, kol))
+        mass_Pr.append(model(7, 6, 8, 140, kol))
+        mass_Pr.append(model(8, 14, 8, 140, kol))
         print('\n\n\n')
         from statistics import mean
         disps = 0 # Сумма дисперсий
         dispmax = 0 # Максимальная дисперсия
+        dispAv = 0
         for i in range(len(mass_Pr)):
             srednee = round(mean(mass_Pr[i]), 2)
             disp = 0 # Дисперсия
@@ -187,13 +190,17 @@ def Regress():
             disps += disp
             if disp > dispmax:
                 dispmax = disp
+            dispAv += disp
             print(f"{i}: Среднее: {srednee:7} | Дисперсия: {disp:10}")
+        
         grasch = dispmax/disps
         gtabl = 0.5157
         print(f"Gрасч = {grasch}\nGтабл = {gtabl}\nGрасч < Gтабличного => гипотеза об однородности ряда выборочных дисперсии выходного параметра не отвергается")
         if grasch >= gtabl:
             os.system("cls")
             continue
+        dispAv /= len(mass_Pr)
+        print(f'Средняя дисперсия: {dispAv}')
         print("Уравнение регрессии: b0x0+b1x1+b2x2+b3x3")
         break
 
