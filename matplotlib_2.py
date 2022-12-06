@@ -164,8 +164,23 @@ def model(iter, Aa, Mm, strah, Kol_vo = 10000):
     return pr
     
 def Regress():
+    matrix_plan = [
+        [1,1,1,1,1,1,1,1],
+        [-1,1,-1,1,-1,1,-1,1],
+        [-1,-1,1,1,-1,-1,1,1],
+        [-1,-1,-1,-1,1,1,1,1]
+    ]
+    matrix_plan_vert = [[1,0,0,0],
+        [1,1,0,0],
+        [1,0,1,0],
+        [1,1,1,0],
+        [1,0,0,1],
+        [1,1,0,1],
+        [1,0,1,1],
+        [1,1,1,1]
+    ]
     for _ in range(100):
-        kol = 10000
+        kol = 1000
         print(f"Количество итераций в каждом опыте: {kol}")
         mass_Pr = []
         mass_Pr.append(model(1, 6, 4, 100, kol))
@@ -180,19 +195,20 @@ def Regress():
         from statistics import mean
         disps = 0 # Сумма дисперсий
         dispmax = 0 # Максимальная дисперсия
-        dispAv = 0
+        dispAv = 0 # Средняя дисперсия
+        list_Y_av = []
         for i in range(len(mass_Pr)):
-            srednee = round(mean(mass_Pr[i]), 2)
+            list_Y_av.append(round(mean(mass_Pr[i]), 2))
             disp = 0 # Дисперсия
             for j in mass_Pr[i]:
-                disp += (j-srednee)**2/(len(mass_Pr[i])-1)
+                disp += (j-list_Y_av[-1])**2/(len(mass_Pr[i])-1)
             disp = round(disp, 2)
             disps += disp
             if disp > dispmax:
                 dispmax = disp
             dispAv += disp
-            print(f"{i}: Среднее: {srednee:7} | Дисперсия: {disp:10}")
-        
+            print(f"{i}: Среднее: {list_Y_av[-1]:7} | Дисперсия: {disp:10}")
+        print('\n\n\n')
         grasch = dispmax/disps
         gtabl = 0.5157
         print(f"Gрасч = {grasch}\nGтабл = {gtabl}\nGрасч < Gтабличного => гипотеза об однородности ряда выборочных дисперсии выходного параметра не отвергается")
@@ -200,8 +216,42 @@ def Regress():
             os.system("cls")
             continue
         dispAv /= len(mass_Pr)
+        print("Таким образом, все предпосылки для проведения множественного ре-грессионного анализа выполняются и можно приступить к расчету коэффици-ентов уравнения  регрессии:")
+        koefs = []
+        for i in range(len(matrix_plan)):
+            koef = 0
+            print('(', end='')
+            for j in range(len(matrix_plan[i])):
+                koef += matrix_plan[i][j] * list_Y_av[j]
+                print(f'{matrix_plan[i][j]} * {list_Y_av[j]} + ', end='')
+            koef = koef / 8
+            koef = round(koef, 2)
+            koefs.append(koef)
+            print(f')/8 = {koef}')
+        print(f"Уравнение регрессии: ", end='')
+        for i in range(len(koefs)):
+            print(f'({koefs[i]})*x{i} + ', end='')
+        print("= y")
+        print("Проверим адекватность уравнения регрессии по критерию Фишера: ")
+        list_Y_regress = []
+        for i in range(len(matrix_plan_vert)):
+            raschet = 0
+            for j in range(len(matrix_plan_vert[i])):
+                raschet += koefs[j]* matrix_plan_vert[i][j]
+            raschet = round(raschet, 2)
+            print(f'Y{i} = {raschet}')
+            list_Y_regress.append(raschet)
+        S2ad = 0
+        for i in range(len(list_Y_regress)):
+            S2ad += (list_Y_av[i] - list_Y_regress[i])**2
+        S2ad *= 3/4
+        print(f'S2ad = {S2ad}')
         print(f'Средняя дисперсия: {dispAv}')
-        print("Уравнение регрессии: b0x0+b1x1+b2x2+b3x3")
+        print(f'Критерий фишера: {S2ad/dispAv}')
+        print('''
+        Так как расчетное значение F – критерия больше табличного, то гипотеза об адекватности полученного значения приближенной регрессии экспериментальным данным отвергается.
+Как было отмечено выше, в данном случае можно уменьшить интервалы варьирования факторов, выбрать другую базовую точку либо перейти к  нелинейной модели – к полиному второго порядка. Однако в рассматриваемых условиях целесообразно учесть, что один из часто встречающихся видов нелинейности  связан с тем, что эффект  одного фактора зависит от уровня, на котором находится другой фактор. ПФЭ позволяет количественно оценить все эффекты взаимодействия факторов. Дополнительных экспериментов при этом проводить не требуется
+        ''')
         break
 
 Regress()
